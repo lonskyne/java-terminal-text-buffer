@@ -8,6 +8,13 @@ public class TerminalBufferCell {
     private TerminalBufferColor foregroundColor;
     private EnumSet<TerminalBufferCellStyle> styles;
 
+    public TerminalBufferCell() {
+        this.character = ' ';
+        backgroundColor = TerminalBufferColor.BLACK;
+        foregroundColor = TerminalBufferColor.WHITE;
+        styles = EnumSet.noneOf(TerminalBufferCellStyle.class);
+    }
+
     public TerminalBufferCell(char character, TerminalBufferColor backgroundColor, TerminalBufferColor foregroundColor, EnumSet<TerminalBufferCellStyle> styles) {
         this.character = character;
         this.backgroundColor = backgroundColor;
