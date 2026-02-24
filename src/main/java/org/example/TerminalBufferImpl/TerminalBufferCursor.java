@@ -37,6 +37,15 @@ public class TerminalBufferCursor {
     }
 
     /**
+     * Gets the current cursor index.
+     *
+     * @return the current cursor index
+     */
+    public int getCurrentIndex() {
+        return currentIndex;
+    }
+
+    /**
      * Sets the cursors row index. Clamped between 0 and screen height - 1.
      *
      * @param newRow the new row index of the cursor

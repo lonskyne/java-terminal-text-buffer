@@ -21,4 +21,20 @@ public class TerminalBufferCell {
         this.foregroundColor = foregroundColor;
         this.styles = styles;
     }
+
+    public void setCharacter(char character) {
+        this.character = character;
+    }
+
+    public void setBackgroundColor(TerminalBufferColor backgroundColor) {
+        this.backgroundColor = backgroundColor;
+    }
+
+    public void setForegroundColor(TerminalBufferColor foregroundColor) {
+        this.foregroundColor = foregroundColor;
+    }
+
+    public void setStyles(EnumSet<TerminalBufferCellStyle> styles) {
+        this.styles = styles;
+    }
 }
