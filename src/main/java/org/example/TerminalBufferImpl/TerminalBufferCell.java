@@ -10,8 +10,8 @@ public class TerminalBufferCell {
 
     public TerminalBufferCell() {
         this.character = ' ';
-        backgroundColor = TerminalBufferColor.BLACK;
-        foregroundColor = TerminalBufferColor.WHITE;
+        backgroundColor = TerminalBufferColor.DEFAULT;
+        foregroundColor = TerminalBufferColor.DEFAULT;
         styles = EnumSet.noneOf(TerminalBufferCellStyle.class);
     }
 
