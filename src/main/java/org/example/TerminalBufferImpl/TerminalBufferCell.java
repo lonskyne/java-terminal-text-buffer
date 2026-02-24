@@ -1,5 +1,17 @@
 package org.example.TerminalBufferImpl;
 
-public class TerminalBufferCell {
+import java.util.EnumSet;
 
+public class TerminalBufferCell {
+    private char character;
+    private TerminalBufferColor backgroundColor;
+    private TerminalBufferColor foregroundColor;
+    private EnumSet<TerminalBufferCellStyle> styles;
+
+    public TerminalBufferCell(char character, TerminalBufferColor backgroundColor, TerminalBufferColor foregroundColor, EnumSet<TerminalBufferCellStyle> styles) {
+        this.character = character;
+        this.backgroundColor = backgroundColor;
+        this.foregroundColor = foregroundColor;
+        this.styles = styles;
+    }
 }
