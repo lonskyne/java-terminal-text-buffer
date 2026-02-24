@@ -1,10 +1,9 @@
 package org.example.TerminalBufferImpl;
 
 public class TerminalBufferCursor {
-    private int currentRow;
-    private int currentColumn;
     private int screenWidth;
     private int screenHeight;
+    private int currentIndex;
 
     /**
      * Constructs a TerminalBufferCursor object.
@@ -13,11 +12,10 @@ public class TerminalBufferCursor {
      * @param screenHeight the current screen height
      */
     public TerminalBufferCursor(int screenWidth, int screenHeight) {
-        this.currentRow = 0;
-        this.currentColumn = 0;
-
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeight;
+
+        this.currentIndex = 0;
     }
 
     /**
@@ -26,7 +24,7 @@ public class TerminalBufferCursor {
      * @return the current cursor row index
      */
     public int getCurrentRow() {
-        return currentRow;
+        return this.currentIndex / screenWidth;
     }
 
     /**
@@ -35,12 +33,11 @@ public class TerminalBufferCursor {
      * @return the current cursor column index
      */
     public int getCurrentColumn() {
-        return currentColumn;
+        return this.currentIndex % screenWidth;
     }
 
     /**
-     * Sets the cursors current row index. Clamps the row index
-     * so the cursor does not end up off-screen.
+     * Sets the cursors row index. Clamped between 0 and screen height - 1.
      *
      * @param newRow the new row index of the cursor
      */
@@ -53,12 +50,11 @@ public class TerminalBufferCursor {
             newRow = screenHeight - 1;
         }
 
-        this.currentRow = newRow;
+        this.currentIndex = newRow * screenWidth + getCurrentColumn();
     }
 
     /**
-     * Sets the cursors current column index. Clamps the column index
-     * so the cursor does not end up off-screen.
+     * Sets the cursors column index. Clamped between 0 and screen width - 1.
      *
      * @param newColumn the new column index of the cursor
      */
@@ -71,7 +67,26 @@ public class TerminalBufferCursor {
             newColumn = screenWidth - 1;
         }
 
-        this.currentColumn = newColumn;
+        this.currentIndex = getCurrentRow() * screenWidth + newColumn;
+    }
+
+    /**
+     * Sets the cursors current index. Clamps the index
+     * so the cursor does not end up off-screen.
+     * Updates the cursor row and column index.
+     *
+     * @param newIndex the new index of the cursor
+     */
+    public void setCurrentIndex(int newIndex) {
+        if(newIndex < 0) {
+            newIndex = 0;
+        }
+
+        if(newIndex > screenWidth * screenHeight - 1) {
+            newIndex = screenWidth * screenHeight - 1;
+        }
+
+        this.currentIndex = newIndex;
     }
 
     /**
@@ -93,7 +108,7 @@ public class TerminalBufferCursor {
      * @param numOfCells the number of cells for the cursor to be moved up for
      */
     public void moveUp(int numOfCells) {
-        setCurrentRow(getCurrentRow() + numOfCells);
+        setCurrentRow(getCurrentRow() - numOfCells);
     }
 
     /**
@@ -103,27 +118,27 @@ public class TerminalBufferCursor {
      * @param numOfCells the number of cells for the cursor to be moved down for
      */
     public void moveDown(int numOfCells) {
-        setCurrentRow(getCurrentRow() - numOfCells);
+        setCurrentRow(getCurrentRow() + numOfCells);
     }
 
     /**
      * Moves the cursor right by the given number of cells.
-     * Cursor position is clamped so it does not end up off-screen
+     * Cursor moves to the beginning of next row after the end of the row.
      *
      * @param numOfCells the number of cells for the cursor to be moved right for
      */
     public void moveRight(int numOfCells) {
-        setCurrentColumn(getCurrentColumn() + numOfCells);
+        setCurrentIndex(currentIndex + numOfCells);
     }
 
     /**
      * Moves the cursor left by the given number of cells.
-     * Cursor position is clamped so it does not end up off-screen
+     * Cursor moves to the end of the previous row after the end of the row.
      *
      * @param numOfCells the number of cells for the cursor to be moved left for
      */
     public void moveLeft(int numOfCells) {
-        setCurrentColumn(getCurrentColumn() - numOfCells);
+        setCurrentIndex(currentIndex - numOfCells);
     }
 
 
