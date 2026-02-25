@@ -37,4 +37,18 @@ public class TerminalBufferCell {
     public void setStyles(EnumSet<TerminalBufferCellStyle> styles) {
         this.styles = styles;
     }
+
+    public void copyFrom(TerminalBufferCell other) {
+        this.character = other.character;
+        this.backgroundColor = other.backgroundColor;
+        this.foregroundColor = other.foregroundColor;
+        this.styles = EnumSet.copyOf(other.styles);
+    }
+
+    public void clear() {
+        this.character = ' ';
+        this.backgroundColor = TerminalBufferColor.DEFAULT;
+        this.foregroundColor = TerminalBufferColor.DEFAULT;
+        this.styles = EnumSet.noneOf(TerminalBufferCellStyle.class);
+    }
 }
