@@ -27,9 +27,13 @@ class TerminalBufferTest {
         terminal.getCursor().moveLeft(2);
         assertEquals(1, terminal.getCursor().getCurrentColumn());
 
+        // Cursor expected to remain at beginning of line after moving left however many times.
         terminal.getCursor().moveLeft(5);
+        terminal.getCursor().moveLeft(1);
         assertEquals(0, terminal.getCursor().getCurrentColumn());
+        assertEquals(0, terminal.getCursor().getCurrentRow());
 
+        // Cursor expected to move down and right until hitting the end of the screen buffer, then stop moving.
         terminal.getCursor().moveRight(14);
         assertEquals(4, terminal.getCursor().getCurrentColumn());
         assertEquals(2, terminal.getCursor().getCurrentRow());
@@ -43,6 +47,12 @@ class TerminalBufferTest {
 
         assertEquals('A', terminal.getCharacterAtPositionScreen(0, 0));
         assertEquals(1, terminal.getCursor().getCurrentColumn());
+
+        // Cursor expected to go to next line after writing until end of line thus scrolling.
+        terminal.getCursor().setPosition(2, 4);
+        terminal.writeTextOnLine("A");
+        assertEquals('A', terminal.getCharacterAtPositionScreen(1, 4));
+        assertEquals('·', terminal.getCharacterAtPositionScreen(2, 4));
     }
 
     @Test
@@ -51,13 +61,21 @@ class TerminalBufferTest {
 
         terminal.writeTextOnLine("ABC");
 
+        assertEquals("ABC··", terminal.getScreenLineAsString(0));
         assertEquals("ABC··\n·····\n·····\n", terminal.getScreenAsString()); // fill with spaces
         assertEquals(3, terminal.getCursor().getCurrentColumn());
 
+        // Expected to stop writing at end of line and for the cursor to go to the next line.
         terminal.writeTextOnLine("ABC");
 
+        assertEquals("ABCAB", terminal.getScreenLineAsString(0));
         assertEquals("ABCAB\n·····\n·····\n", terminal.getScreenAsString()); // fill with spaces
         assertEquals(0, terminal.getCursor().getCurrentColumn());
+
+        // Expected to write in the next line
+        terminal.writeTextOnLine("ABC");
+
+        assertEquals("ABC··", terminal.getScreenLineAsString(1));
     }
 
     @Test
@@ -65,6 +83,7 @@ class TerminalBufferTest {
         terminal.clearScreen();
         terminal.getCursor().setPosition(0, 3);
 
+        // Expected to wrap line to next one
         terminal.insertTextOnLine("XYZ");
         assertEquals("···XY\nZ····\n·····\n", terminal.getScreenAsString());
 
@@ -73,18 +92,21 @@ class TerminalBufferTest {
 
         terminal.getCursor().setPosition(0, 0);
 
+        // Expected to insert new text in the beginning, shifting other text to the right and down.
+        // Expected to only wrap the content of the current row, leaving lines below only shifted, but unchanged.
         terminal.insertTextOnLine("WXYZ");
         assertEquals("WXYZX\nY····\nZXYZ·\n", terminal.getScreenAsString());
 
         terminal.clearScreen();
 
+        // Expected to insert text between characters, wrapping the current line.
         terminal.insertTextOnLine("ABC");
-        assertEquals("ABC··\n·····\n·····\n", terminal.getScreenAsString());
-
         terminal.getCursor().setPosition(0, 1);
         terminal.insertTextOnLine("XYZ");
+        assertEquals("C····", terminal.getScreenLineAsString(1));
         assertEquals("AXYZB\nC····\n·····\n", terminal.getScreenAsString());
 
+        // Expected to maintain lines below the current as they are, just shift them down.
         terminal.getCursor().setPosition(0, 2);
         terminal.insertTextOnLine("1234");
         assertEquals("AX123\n4YZB·\nC····\n", terminal.getScreenAsString());
@@ -104,12 +126,16 @@ class TerminalBufferTest {
         terminal.getCursor().setPosition(0, 2);
         terminal.insertTextOnLine("1234");
 
+        // Expected to maintain lines after the current, just shift them.
+        // Expected to scroll the screen when a line would exit the screen at the bottom.
         terminal.getCursor().setPosition(0, 0);
         terminal.insertTextOnLine("123456789");
         assertEquals("X123·\n4YZB·\nC····\n", terminal.getScreenAsString());
 
+        // Expected correct wrapping of text.
         terminal.clearScreen();
         terminal.insertTextOnLine("1234567891011121314");
+        assertEquals("1314·", terminal.getScreenLineAsString(2));
         assertEquals("67891\n01112\n1314·\n", terminal.getScreenAsString());
     }
 
@@ -118,6 +144,7 @@ class TerminalBufferTest {
         terminal.getCursor().setPosition(1, 0);
         terminal.fillLineWithCharacter('a');
 
+        // Expected filled line and cursor at the beginning of the next.
         assertEquals("·····\naaaaa\n·····\n", terminal.getScreenAsString());
         assertEquals(0, terminal.getCursor().getCurrentColumn());
 
@@ -125,6 +152,7 @@ class TerminalBufferTest {
         assertEquals("aaaaa\nbbbbb\n·····\n", terminal.getScreenAsString());
         assertEquals(0, terminal.getCursor().getCurrentColumn());
 
+        // Expected to fill out the line with empty cells and maintain the cursor at the beginning of the line.
         terminal.fillLineWithCharacter();
         assertEquals("aaaaa\nbbbbb\n·····\n", terminal.getScreenAsString());
         assertEquals(0, terminal.getCursor().getCurrentColumn());
@@ -144,6 +172,7 @@ class TerminalBufferTest {
     void testCellAttributes() {
         terminal.clearScreen();
 
+        // Expected default cells when terminal is cleared.
         assertEquals(TerminalBufferColor.DEFAULT, terminal.getBackgroundColorAtPositionScreen(0, 0));
         assertEquals(TerminalBufferColor.DEFAULT, terminal.getForegroundColorAtPositionScreen(0, 0));
         assertEquals(EnumSet.noneOf(TerminalBufferCellStyle.class), terminal.getStylesAtPositionScreen(0, 0));
@@ -154,6 +183,7 @@ class TerminalBufferTest {
         assertEquals(TerminalBufferColor.DEFAULT, terminal.getForegroundColorAtPositionScreen(0, 0));
         assertEquals(EnumSet.noneOf(TerminalBufferCellStyle.class), terminal.getStylesAtPositionScreen(0, 0));
 
+        // Expected to use the new colors and styles when writing on line.
         terminal.setCurrentBackgroundColor(TerminalBufferColor.BLACK);
         terminal.setCurrentForegroundColor(TerminalBufferColor.WHITE);
         terminal.setCurrentStyles(EnumSet.allOf(TerminalBufferCellStyle.class));
@@ -164,6 +194,7 @@ class TerminalBufferTest {
         assertEquals(TerminalBufferColor.WHITE, terminal.getForegroundColorAtPositionScreen(1, 0));
         assertEquals(EnumSet.allOf(TerminalBufferCellStyle.class), terminal.getStylesAtPositionScreen(1, 0));
 
+        // Expected new styles and colors only on the newly inserted part of the screen.
         terminal.setCurrentBackgroundColor(TerminalBufferColor.BLUE);
         terminal.setCurrentForegroundColor(TerminalBufferColor.RED);
         terminal.setCurrentStyles(EnumSet.of(TerminalBufferCellStyle.BOLD));
@@ -183,7 +214,7 @@ class TerminalBufferTest {
         assertEquals(TerminalBufferColor.RED, terminal.getForegroundColorAtPositionScreen(1, 4));
         assertEquals(EnumSet.of(TerminalBufferCellStyle.BOLD), terminal.getStylesAtPositionScreen(1, 4));
 
-        // Test attributes when scrolling
+        // Expected that cells are scrolled up and with them their color/styles.
         terminal.insertTextOnLine("CDCDC");
 
         assertEquals(TerminalBufferColor.BLUE, terminal.getBackgroundColorAtPositionScreen(0, 1));

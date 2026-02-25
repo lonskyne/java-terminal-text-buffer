@@ -276,34 +276,6 @@ public class TerminalBuffer {
     }
 
     /**
-     * Returns a string representing the terminal screen buffer.
-     *
-     * @return the string representation of the screen buffer
-     */
-    public String getScreenAsString() {
-        StringBuilder sb = new StringBuilder();
-        int index = 0;
-
-        for(int i = 0; i < screenWidth * screenHeight; i++) {
-
-            if(screenBuffer[i].isEmpty()) {
-                sb.append('·');
-            }
-            else {
-                sb.append(screenBuffer[i].getCharacter());
-            }
-
-            index++;
-
-            if(index % screenWidth == 0) {
-                sb.append('\n');
-            }
-        }
-
-        return sb.toString();
-    }
-
-    /**
      * Returns a character that is in the given position in the screen buffer.
      *
      * @param x row index
@@ -348,5 +320,48 @@ public class TerminalBuffer {
      */
     public EnumSet<TerminalBufferCellStyle> getStylesAtPositionScreen(int x, int y) {
         return screenBuffer[x * screenWidth + y].getStyles();
+    }
+
+    /**
+     * Returns the asked row of the screen as a string.
+     *
+     * @param x row index
+     * @return the row of the screen as a string
+     */
+    public String getScreenLineAsString(int x) {
+        StringBuilder sb = new StringBuilder();
+        for(int y = 0; y < screenWidth; y++) {
+            sb.append(screenBuffer[x * screenWidth + y].getCharacter());
+        }
+
+        return sb.toString();
+    }
+
+    /**
+     * Returns a string representing the terminal screen buffer.
+     *
+     * @return the string representation of the screen buffer
+     */
+    public String getScreenAsString() {
+        StringBuilder sb = new StringBuilder();
+        int index = 0;
+
+        for(int i = 0; i < screenWidth * screenHeight; i++) {
+
+            if(screenBuffer[i].isEmpty()) {
+                sb.append('·');
+            }
+            else {
+                sb.append(screenBuffer[i].getCharacter());
+            }
+
+            index++;
+
+            if(index % screenWidth == 0) {
+                sb.append('\n');
+            }
+        }
+
+        return sb.toString();
     }
 }
