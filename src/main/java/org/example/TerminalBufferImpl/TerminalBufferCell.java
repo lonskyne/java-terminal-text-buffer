@@ -3,19 +3,21 @@ package org.example.TerminalBufferImpl;
 import java.util.EnumSet;
 
 public class TerminalBufferCell {
+    private boolean isEmpty;
     private char character;
     private TerminalBufferColor backgroundColor;
     private TerminalBufferColor foregroundColor;
     private EnumSet<TerminalBufferCellStyle> styles;
 
     public TerminalBufferCell() {
-        this.character = ' ';
+        this.isEmpty = true;
         backgroundColor = TerminalBufferColor.DEFAULT;
         foregroundColor = TerminalBufferColor.DEFAULT;
         styles = EnumSet.noneOf(TerminalBufferCellStyle.class);
     }
 
     public TerminalBufferCell(char character, TerminalBufferColor backgroundColor, TerminalBufferColor foregroundColor, EnumSet<TerminalBufferCellStyle> styles) {
+        this.isEmpty = false;
         this.character = character;
         this.backgroundColor = backgroundColor;
         this.foregroundColor = foregroundColor;
@@ -23,6 +25,7 @@ public class TerminalBufferCell {
     }
 
     public void setCharacter(char character) {
+        this.isEmpty = false;
         this.character = character;
     }
 
@@ -39,6 +42,7 @@ public class TerminalBufferCell {
     }
 
     public void copyFrom(TerminalBufferCell other) {
+        this.isEmpty = other.isEmpty;
         this.character = other.character;
         this.backgroundColor = other.backgroundColor;
         this.foregroundColor = other.foregroundColor;
@@ -46,9 +50,13 @@ public class TerminalBufferCell {
     }
 
     public void clear() {
-        this.character = ' ';
+        this.isEmpty = true;
         this.backgroundColor = TerminalBufferColor.DEFAULT;
         this.foregroundColor = TerminalBufferColor.DEFAULT;
         this.styles = EnumSet.noneOf(TerminalBufferCellStyle.class);
+    }
+
+    public boolean isEmpty() {
+        return isEmpty;
     }
 }
