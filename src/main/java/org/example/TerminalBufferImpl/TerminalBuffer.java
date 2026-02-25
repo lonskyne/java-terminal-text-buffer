@@ -155,8 +155,6 @@ public class TerminalBuffer {
      * @param text the text to be inserted
      */
     public void insertTextOnLine(String text) {
-        System.out.println(text + " _____________________");
-        System.out.println(getScreenAsString());
         int textLen = text.length();
         int textIndex = 0;
 
@@ -184,10 +182,7 @@ public class TerminalBuffer {
             return;
         }
 
-        System.out.println(getScreenAsString());
-
         // Add full row lengths first
-        System.out.println(textLen + " " + textIndex);
         while(textLen - textIndex >= screenWidth) {
             for(int i = lastCharacterIndex + screenWidth; i >= cursor.getCurrentIndex() + screenWidth; i--) {
                 screenBuffer[i].copyFrom(screenBuffer[i - screenWidth]);
@@ -208,8 +203,6 @@ public class TerminalBuffer {
                 scrollUp(1);
             }
         }
-        System.out.println(getScreenAsString());
-
 
         // Add what is left of the text
         int notRowPart = leftoverLen % screenWidth;
