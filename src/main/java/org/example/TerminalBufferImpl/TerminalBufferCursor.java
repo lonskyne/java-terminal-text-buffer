@@ -1,8 +1,8 @@
 package org.example.TerminalBufferImpl;
 
 public class TerminalBufferCursor {
-    private int screenWidth;
-    private int screenHeight;
+    private final int screenWidth;
+    private final int screenHeight;
     private int currentIndex;
 
     /**

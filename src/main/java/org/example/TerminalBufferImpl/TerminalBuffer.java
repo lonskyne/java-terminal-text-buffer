@@ -1,17 +1,16 @@
 package org.example.TerminalBufferImpl;
 
-import java.util.Arrays;
 import java.util.EnumSet;
 
 
 public class TerminalBuffer {
-    private int screenWidth;
-    private int screenHeight;
-    private int cellCount;
+    private final int screenWidth;
+    private final int screenHeight;
+    private final int cellCount;
 
-    private TerminalBufferCell[] screenBuffer;
-    private ScrollbackBuffer scrollbackBuffer;
-    private TerminalBufferCursor cursor;
+    private final TerminalBufferCell[] screenBuffer;
+    private final ScrollbackBuffer scrollbackBuffer;
+    private final TerminalBufferCursor cursor;
 
     private TerminalBufferColor currentBackgroundColor;
     private TerminalBufferColor currentForegroundColor;
@@ -37,7 +36,7 @@ public class TerminalBuffer {
         lastCharacterIndex = Math.max(lastCharacterIndex, cursorIndex);
 
         // Scroll if at end of line.
-        if (cursorIndex >= screenWidth * screenHeight - 1) {
+        if (cursorIndex >= cellCount - 1) {
             scrollUp(1);
         }
 
@@ -59,7 +58,7 @@ public class TerminalBuffer {
             rows = screenHeight;
         }
 
-        int totalCells = screenWidth * screenHeight + screenWidth;
+        int totalCells = cellCount + screenWidth;
         int shift = rows * screenWidth;
 
         // Shift rows up
@@ -78,7 +77,7 @@ public class TerminalBuffer {
     }
 
     private void recalculateLastCharacterIndex() {
-        lastCharacterIndex = screenWidth * screenHeight - 1;
+        lastCharacterIndex = cellCount - 1;
 
         while(lastCharacterIndex >= 0 && screenBuffer[lastCharacterIndex].isEmpty()) {
             lastCharacterIndex--;
@@ -199,7 +198,7 @@ public class TerminalBuffer {
                 textIndex++;
             }
 
-            if(lastCharacterIndex > screenWidth * screenHeight - 1) {
+            if(lastCharacterIndex > cellCount - 1) {
                 scrollUp(1);
             }
         }

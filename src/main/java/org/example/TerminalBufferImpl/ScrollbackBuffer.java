@@ -1,10 +1,10 @@
 package org.example.TerminalBufferImpl;
 
 public class ScrollbackBuffer {
-    private int maxScrollbackLines;
-    private int screenWidth;
+    private final int maxScrollbackLines;
+    private final int screenWidth;
 
-    private TerminalBufferCell[] buffer;
+    private final TerminalBufferCell[] buffer;
 
     public ScrollbackBuffer(int maxScrollbackLines, int screenWidth) {
         this.maxScrollbackLines = maxScrollbackLines;
