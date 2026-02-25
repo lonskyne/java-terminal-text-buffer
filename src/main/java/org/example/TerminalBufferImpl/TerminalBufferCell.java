@@ -59,4 +59,8 @@ public class TerminalBufferCell {
     public boolean isEmpty() {
         return isEmpty;
     }
+
+    public char getCharacter() {
+        return character;
+    }
 }

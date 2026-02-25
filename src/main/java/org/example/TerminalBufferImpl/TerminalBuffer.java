@@ -29,17 +29,17 @@ public class TerminalBuffer {
     private void writeCharacterOnScreenBuffer(char c) {
         int cursorIndex = cursor.getCurrentIndex();
 
-        // Scroll if at end of line.
-        if (cursorIndex >= screenWidth * screenHeight - 1) {
-            scrollUp(1);
-        }
-
         screenBuffer[cursorIndex].setCharacter(c);
         screenBuffer[cursorIndex].setForegroundColor(currentForegroundColor);
         screenBuffer[cursorIndex].setBackgroundColor(currentBackgroundColor);
         screenBuffer[cursorIndex].setStyles(EnumSet.copyOf(currentStyles));
 
         lastCharacterIndex = Math.max(lastCharacterIndex, cursorIndex);
+
+        // Scroll if at end of line.
+        if (cursorIndex >= screenWidth * screenHeight - 1) {
+            scrollUp(1);
+        }
 
         cursor.moveRight(1);
     }
@@ -59,7 +59,7 @@ public class TerminalBuffer {
             rows = screenHeight;
         }
 
-        int totalCells = screenWidth * screenHeight;
+        int totalCells = screenWidth * screenHeight + screenWidth;
         int shift = rows * screenWidth;
 
         // Shift rows up
@@ -80,7 +80,7 @@ public class TerminalBuffer {
     private void recalculateLastCharacterIndex() {
         lastCharacterIndex = screenWidth * screenHeight - 1;
 
-        while(screenBuffer[lastCharacterIndex].isEmpty()) {
+        while(lastCharacterIndex >= 0 && screenBuffer[lastCharacterIndex].isEmpty()) {
             lastCharacterIndex--;
         }
     }
@@ -90,7 +90,11 @@ public class TerminalBuffer {
         this.screenHeight = screenHeight;
 
         this.cellCount = screenWidth * screenHeight;
-        this.screenBuffer = new TerminalBufferCell[cellCount];
+        this.screenBuffer = new TerminalBufferCell[cellCount + screenWidth];
+
+        for(int i = 0; i < cellCount + screenWidth; i++) {
+            this.screenBuffer[i] = new TerminalBufferCell();
+        }
 
         this.scrollbackBuffer = new ScrollbackBuffer(maxScrollbackLines, screenWidth);
         this.cursor = new TerminalBufferCursor(screenWidth, screenHeight);
@@ -100,6 +104,9 @@ public class TerminalBuffer {
         this.currentStyles = EnumSet.noneOf(TerminalBufferCellStyle.class);
     }
 
+    public TerminalBufferCursor getCursor() {
+        return cursor;
+    }
 
     /**
      * Changes the current used background color.
@@ -151,51 +158,84 @@ public class TerminalBuffer {
         int textLen = text.length();
         int textIndex = 0;
 
-        // If we are inserting into empty space, no shifting needed.
+        // Move text in current row right if there is space
+        int lastInRow = ((cursor.getCurrentRow() + 1) * screenWidth) - 1;
+        while(lastInRow >= 0 && screenBuffer[lastInRow].isEmpty()) {
+            lastInRow--;
+        }
+        if(lastInRow >= cursor.getCurrentIndex()) {
+            int amountToMove = Math.min(textLen, screenWidth - lastInRow - 1);
+            for (int i = lastInRow + amountToMove; i > lastInRow; i--) {
+                screenBuffer[i].copyFrom(screenBuffer[i - amountToMove]);
+                screenBuffer[i - amountToMove].clear();
+                lastCharacterIndex = Math.max(i, lastCharacterIndex);
+            }
+        }
+
+        // If we are inserting into empty space, no shifting needed
         while(textIndex < textLen && screenBuffer[cursor.getCurrentIndex()].isEmpty()) {
             writeCharacterOnScreenBuffer(text.charAt(textIndex));
             textIndex++;
         }
 
-        // Insert text line by line
-        while(textIndex < textLen) {
-            int lengthToInsert = Math.min(textLen - textIndex, screenWidth);
+        int leftoverLen = textLen - textIndex;
+        if(leftoverLen <= 0) {
+            return;
+        }
 
-            // If inserting would go over the buffer, scroll up.
-            if(lastCharacterIndex + lengthToInsert >= screenWidth * screenHeight) {
-                scrollUp(1);
-            }
+        // Add full row lengths first
+        while((textLen - textIndex - 1) >= screenWidth) {
+            for(int i = lastCharacterIndex + screenWidth; i >= cursor.getCurrentIndex() + screenWidth; i--) {
+                screenBuffer[i].copyFrom(screenBuffer[i - screenWidth]);
+                screenBuffer[i - screenWidth].clear();
 
-            // Shift text to the right
-            for(int j = lastCharacterIndex + lengthToInsert; j >= cursor.getCurrentIndex() + lengthToInsert; j--) {
-                screenBuffer[j].copyFrom(screenBuffer[j - lengthToInsert]);
-            }
-
-            lastCharacterIndex = lastCharacterIndex + lengthToInsert;
-
-            // When inserting last part that is smaller than row, insert additional empty cells until end of row.
-            if(lengthToInsert < screenWidth) {
-                int endOfInserted = cursor.getCurrentIndex() + lengthToInsert;
-                int additionalEmptyInsert = screenWidth - lengthToInsert;
-
-                if(lastCharacterIndex + additionalEmptyInsert >= screenWidth * screenHeight) {
-                    scrollUp(1);
+                if(!screenBuffer[i].isEmpty()) {
+                    lastCharacterIndex = Math.max(lastCharacterIndex, i);
                 }
-
-                for(int i = lastCharacterIndex + additionalEmptyInsert; i >= endOfInserted + additionalEmptyInsert; i--) {
-                    screenBuffer[i].copyFrom(screenBuffer[i - additionalEmptyInsert]);
-                    screenBuffer[i - additionalEmptyInsert].clear();
-                }
-
-                lastCharacterIndex = lastCharacterIndex + screenWidth - lengthToInsert;
             }
 
-
-            // Write the text in the emptied space
-            for(int j = 0; j < lengthToInsert; j++) {
+            for(int i = 0; i < screenWidth; i++) {
                 writeCharacterOnScreenBuffer(text.charAt(textIndex));
+                lastCharacterIndex = Math.max(lastCharacterIndex, i);
                 textIndex++;
             }
+
+            if(lastCharacterIndex > screenWidth * screenHeight - 1) {
+                scrollUp(1);
+            }
+        }
+
+        // Add what is left of the text
+        int notRowPart = leftoverLen % screenWidth;
+
+        // Free up row below cursor by shifting content down
+        int lastToCopy = ((cursor.getCurrentIndex() / screenWidth) + 1) * screenWidth;
+        for(int i = lastCharacterIndex + screenWidth; i >= lastToCopy + screenWidth; i--) {
+            screenBuffer[i].copyFrom(screenBuffer[i - screenWidth]);
+            screenBuffer[i - screenWidth].clear();
+
+            if(!screenBuffer[i].isEmpty()) {
+                lastCharacterIndex = Math.max(lastCharacterIndex, i);
+            }
+        }
+
+        // Make just enough space for the notRowPart
+        for(int i = lastToCopy + notRowPart - 1; i >= cursor.getCurrentIndex() + notRowPart; i--) {
+            screenBuffer[i].copyFrom(screenBuffer[i - notRowPart]);
+            screenBuffer[i - notRowPart].clear();
+
+            if(!screenBuffer[i].isEmpty()) {
+                lastCharacterIndex = Math.max(lastCharacterIndex, i);
+            }
+        }
+
+        for(int i = 0; i < notRowPart; i++) {
+            writeCharacterOnScreenBuffer(text.charAt(textIndex));
+            textIndex++;
+        }
+
+        if(lastCharacterIndex / screenWidth == screenHeight) {
+            scrollUp(1);
         }
     }
 
@@ -227,5 +267,44 @@ public class TerminalBuffer {
         if(cursor.getCurrentRow() == lastCharacterIndex / screenWidth) {
             recalculateLastCharacterIndex();
         }
+    }
+
+    public void clearScreen() {
+        scrollUp(screenHeight);
+    }
+
+    /**
+     * Returns a string representing the terminal screen buffer.
+     *
+     * @return the string representation of the screen buffer
+     */
+    public String getScreenAsString() {
+        StringBuilder sb = new StringBuilder();
+        int index = 0;
+
+        for(int i = 0; i < screenWidth * screenHeight; i++) {
+
+            if(screenBuffer[i].isEmpty()) {
+                sb.append('·');
+            }
+            else {
+                sb.append(screenBuffer[i].getCharacter());
+            }
+
+            index++;
+
+            if(index % screenWidth == 0) {
+                sb.append('\n');
+            }
+        }
+
+        return sb.toString();
+    }
+
+    public char getCharacterAtPositionScreen(int x, int y) {
+        if(screenBuffer[x * screenWidth + y].isEmpty()) {
+            return '·';
+        }
+        return screenBuffer[x * screenWidth + y].getCharacter();
     }
 }
