@@ -9,6 +9,9 @@ public class TerminalBufferCell {
     private TerminalBufferColor foregroundColor;
     private EnumSet<TerminalBufferCellStyle> styles;
 
+    /**
+     * Constructs an empty, styless cell with default colors
+     */
     public TerminalBufferCell() {
         this.isEmpty = true;
         backgroundColor = TerminalBufferColor.DEFAULT;
@@ -24,6 +27,11 @@ public class TerminalBufferCell {
         this.styles = styles;
     }
 
+    /**
+     * Sets a character to a cell, making it not empty.
+     *
+     * @param character new character of the cell
+     */
     public void setCharacter(char character) {
         this.isEmpty = false;
         this.character = character;
@@ -41,6 +49,11 @@ public class TerminalBufferCell {
         this.styles = styles;
     }
 
+    /**
+     * Copies the character, color, styles and empty status from another cell.
+     *
+     * @param other the cell from which content should be copied from.
+     */
     public void copyFrom(TerminalBufferCell other) {
         this.isEmpty = other.isEmpty;
         this.character = other.character;
@@ -49,6 +62,9 @@ public class TerminalBufferCell {
         this.styles = EnumSet.copyOf(other.styles);
     }
 
+    /**
+     * Clears a cell making it empty without styles and reverting colors to default.
+     */
     public void clear() {
         this.isEmpty = true;
         this.backgroundColor = TerminalBufferColor.DEFAULT;
@@ -60,7 +76,28 @@ public class TerminalBufferCell {
         return isEmpty;
     }
 
+    /**
+     * Returns the character in the cell. Returns '·' if cell is empty.
+     *
+     * @return the character in the cell or '·' if cell is empty.
+     */
     public char getCharacter() {
+        if(isEmpty) {
+            return '·';
+        }
+
         return character;
+    }
+
+    public EnumSet<TerminalBufferCellStyle> getStyles() {
+        return styles;
+    }
+
+    public TerminalBufferColor getBackgroundColor() {
+        return backgroundColor;
+    }
+
+    public TerminalBufferColor getForegroundColor() {
+        return foregroundColor;
     }
 }

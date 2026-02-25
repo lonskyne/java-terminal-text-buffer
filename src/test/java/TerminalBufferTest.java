@@ -1,6 +1,11 @@
 import org.example.TerminalBufferImpl.TerminalBuffer;
+import org.example.TerminalBufferImpl.TerminalBufferCellStyle;
+import org.example.TerminalBufferImpl.TerminalBufferColor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.EnumSet;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class TerminalBufferTest {
@@ -133,5 +138,56 @@ class TerminalBufferTest {
         terminal.fillLineWithCharacter();
         assertEquals("·····\n·····\n·····\n", terminal.getScreenAsString());
         assertEquals(0, terminal.getCursor().getCurrentColumn());
+    }
+
+    @Test
+    void testCellAttributes() {
+        terminal.clearScreen();
+
+        assertEquals(TerminalBufferColor.DEFAULT, terminal.getBackgroundColorAtPositionScreen(0, 0));
+        assertEquals(TerminalBufferColor.DEFAULT, terminal.getForegroundColorAtPositionScreen(0, 0));
+        assertEquals(EnumSet.noneOf(TerminalBufferCellStyle.class), terminal.getStylesAtPositionScreen(0, 0));
+
+        terminal.fillLineWithCharacter('A');
+
+        assertEquals(TerminalBufferColor.DEFAULT, terminal.getBackgroundColorAtPositionScreen(0, 0));
+        assertEquals(TerminalBufferColor.DEFAULT, terminal.getForegroundColorAtPositionScreen(0, 0));
+        assertEquals(EnumSet.noneOf(TerminalBufferCellStyle.class), terminal.getStylesAtPositionScreen(0, 0));
+
+        terminal.setCurrentBackgroundColor(TerminalBufferColor.BLACK);
+        terminal.setCurrentForegroundColor(TerminalBufferColor.WHITE);
+        terminal.setCurrentStyles(EnumSet.allOf(TerminalBufferCellStyle.class));
+
+        terminal.fillLineWithCharacter('B');
+
+        assertEquals(TerminalBufferColor.BLACK, terminal.getBackgroundColorAtPositionScreen(1, 0));
+        assertEquals(TerminalBufferColor.WHITE, terminal.getForegroundColorAtPositionScreen(1, 0));
+        assertEquals(EnumSet.allOf(TerminalBufferCellStyle.class), terminal.getStylesAtPositionScreen(1, 0));
+
+        terminal.setCurrentBackgroundColor(TerminalBufferColor.BLUE);
+        terminal.setCurrentForegroundColor(TerminalBufferColor.RED);
+        terminal.setCurrentStyles(EnumSet.of(TerminalBufferCellStyle.BOLD));
+
+        terminal.getCursor().setPosition(1, 1);
+        terminal.insertTextOnLine("ABAB");
+
+        assertEquals(TerminalBufferColor.BLACK, terminal.getBackgroundColorAtPositionScreen(1, 0));
+        assertEquals(TerminalBufferColor.WHITE, terminal.getForegroundColorAtPositionScreen(1, 0));
+        assertEquals(EnumSet.allOf(TerminalBufferCellStyle.class), terminal.getStylesAtPositionScreen(1, 0));
+
+        assertEquals(TerminalBufferColor.BLUE, terminal.getBackgroundColorAtPositionScreen(1, 1));
+        assertEquals(TerminalBufferColor.RED, terminal.getForegroundColorAtPositionScreen(1, 1));
+        assertEquals(EnumSet.of(TerminalBufferCellStyle.BOLD), terminal.getStylesAtPositionScreen(1, 1));
+
+        assertEquals(TerminalBufferColor.BLUE, terminal.getBackgroundColorAtPositionScreen(1, 4));
+        assertEquals(TerminalBufferColor.RED, terminal.getForegroundColorAtPositionScreen(1, 4));
+        assertEquals(EnumSet.of(TerminalBufferCellStyle.BOLD), terminal.getStylesAtPositionScreen(1, 4));
+
+        // Test attributes when scrolling
+        terminal.insertTextOnLine("CDCDC");
+
+        assertEquals(TerminalBufferColor.BLUE, terminal.getBackgroundColorAtPositionScreen(0, 1));
+        assertEquals(TerminalBufferColor.RED, terminal.getForegroundColorAtPositionScreen(0, 1));
+        assertEquals(EnumSet.of(TerminalBufferCellStyle.BOLD), terminal.getStylesAtPositionScreen(0, 1));
     }
 }

@@ -155,6 +155,8 @@ public class TerminalBuffer {
      * @param text the text to be inserted
      */
     public void insertTextOnLine(String text) {
+        System.out.println(text + " _____________________");
+        System.out.println(getScreenAsString());
         int textLen = text.length();
         int textIndex = 0;
 
@@ -171,7 +173,6 @@ public class TerminalBuffer {
                 lastCharacterIndex = Math.max(i, lastCharacterIndex);
             }
         }
-
         // If we are inserting into empty space, no shifting needed
         while(textIndex < textLen && screenBuffer[cursor.getCurrentIndex()].isEmpty()) {
             writeCharacterOnScreenBuffer(text.charAt(textIndex));
@@ -183,8 +184,11 @@ public class TerminalBuffer {
             return;
         }
 
+        System.out.println(getScreenAsString());
+
         // Add full row lengths first
-        while((textLen - textIndex - 1) >= screenWidth) {
+        System.out.println(textLen + " " + textIndex);
+        while(textLen - textIndex >= screenWidth) {
             for(int i = lastCharacterIndex + screenWidth; i >= cursor.getCurrentIndex() + screenWidth; i--) {
                 screenBuffer[i].copyFrom(screenBuffer[i - screenWidth]);
                 screenBuffer[i - screenWidth].clear();
@@ -204,6 +208,8 @@ public class TerminalBuffer {
                 scrollUp(1);
             }
         }
+        System.out.println(getScreenAsString());
+
 
         // Add what is left of the text
         int notRowPart = leftoverLen % screenWidth;
@@ -269,6 +275,9 @@ public class TerminalBuffer {
         }
     }
 
+    /**
+     * Clears the entire screen, moves cursor to the beginning.
+     */
     public void clearScreen() {
         scrollUp(screenHeight);
     }
@@ -301,10 +310,50 @@ public class TerminalBuffer {
         return sb.toString();
     }
 
+    /**
+     * Returns a character that is in the given position in the screen buffer.
+     *
+     * @param x row index
+     * @param y column index
+     * @return character that is on the given position on the screen
+     */
     public char getCharacterAtPositionScreen(int x, int y) {
-        if(screenBuffer[x * screenWidth + y].isEmpty()) {
-            return '·';
-        }
         return screenBuffer[x * screenWidth + y].getCharacter();
+    }
+
+    /**
+     * Returns the foreground color of a character in the given position
+     * in the screen buffer.
+     *
+     * @param x row index
+     * @param y column index
+     * @return the foreground color of a character in the given position on the screen
+     */
+    public TerminalBufferColor getForegroundColorAtPositionScreen(int x, int y) {
+        return screenBuffer[x * screenWidth + y].getForegroundColor();
+    }
+
+    /**
+     * Returns the background color of a character in the given position
+     * in the screen buffer.
+     *
+     * @param x row index
+     * @param y column index
+     * @return the background color of a character in the given position on the screen
+     */
+    public TerminalBufferColor getBackgroundColorAtPositionScreen(int x, int y) {
+        return screenBuffer[x * screenWidth + y].getBackgroundColor();
+    }
+
+    /**
+     * Returns the applied styles to a character in the given position
+     * in the screen buffer.
+     *
+     * @param x row index
+     * @param y column index
+     * @return the applied styles to a character on the given position on the screen
+     */
+    public EnumSet<TerminalBufferCellStyle> getStylesAtPositionScreen(int x, int y) {
+        return screenBuffer[x * screenWidth + y].getStyles();
     }
 }
