@@ -23,6 +23,10 @@ public class ScrollbackBuffer {
         }
     }
 
+    /**
+     * Moves the current index in the ring buffer.
+     * Used for writing in the buffer.
+     */
     private void moveCurIndexOneCellLeft() {
         if(maxScrollbackLines == 0) {
             return;
@@ -30,6 +34,9 @@ public class ScrollbackBuffer {
         curIndex = (curIndex - 1 + buffer.length) % buffer.length;
     }
 
+    /**
+     * Moves the start index in the ring buffer.
+     */
     private void moveStartIndexOneCellLeft() {
         if(maxScrollbackLines == 0) {
             return;
@@ -37,10 +44,17 @@ public class ScrollbackBuffer {
         startIndex = (startIndex - 1 + buffer.length) % buffer.length;
     }
 
+    /**
+     * Inserts the last numOfLines from the screen to the scroll buffer.
+     *
+     * @param screenBuffer the screen buffer
+     * @param numOfLines number of lines to insert into the scroll buffer
+     */
     public void insertLastScreenLinesToScrollback(TerminalBufferCell[] screenBuffer, int numOfLines) {
         if(maxScrollbackLines == 0) {
             return;
         }
+
         for(int i = (numOfLines * screenWidth) - 1; i >= 0; i--) {
             if(startIndex == curIndex && anyWritten) {
                 moveStartIndexOneCellLeft();
@@ -52,6 +66,9 @@ public class ScrollbackBuffer {
         anyWritten = true;
     }
 
+    /**
+     * Clears the scrollback buffer and returns to starting state.
+     */
     public void clearScrollbackBuffer() {
         if(maxScrollbackLines == 0) {
             return;
@@ -71,6 +88,11 @@ public class ScrollbackBuffer {
         anyWritten = false;
     }
 
+    /**
+     * Returns a string representing the terminal scrollback.
+     *
+     * @return the string representation of the scrollback buffer
+     */
     public String getScrollbackAsString() {
         if(maxScrollbackLines == 0) {
             return "";
