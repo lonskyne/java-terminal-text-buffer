@@ -1,6 +1,6 @@
 import org.example.TerminalBufferImpl.TerminalBuffer;
-import org.example.TerminalBufferImpl.TerminalBufferCellStyle;
-import org.example.TerminalBufferImpl.TerminalBufferColor;
+import org.example.TerminalBufferImpl.Model.TerminalBufferCellStyle;
+import org.example.TerminalBufferImpl.Model.TerminalBufferColor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

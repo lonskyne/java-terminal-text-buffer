@@ -1,5 +1,7 @@
 package org.example.TerminalBufferImpl;
 
+import org.example.TerminalBufferImpl.Model.TerminalBufferCell;
+
 public class ScrollbackBuffer {
     private final int maxScrollbackLines;
     private final int screenWidth;

@@ -1,4 +1,4 @@
-package org.example.TerminalBufferImpl;
+package org.example.TerminalBufferImpl.Model;
 
 import java.util.EnumSet;
 

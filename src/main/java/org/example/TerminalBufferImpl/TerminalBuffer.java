@@ -1,5 +1,9 @@
 package org.example.TerminalBufferImpl;
 
+import org.example.TerminalBufferImpl.Model.TerminalBufferCell;
+import org.example.TerminalBufferImpl.Model.TerminalBufferCellStyle;
+import org.example.TerminalBufferImpl.Model.TerminalBufferColor;
+
 import java.util.EnumSet;
 
 
@@ -79,6 +83,10 @@ public class TerminalBuffer {
         cursor.setCurrentIndex(Math.max(newIndex, 0));
     }
 
+    /**
+     * Recalculates the lastCharacterIndex as the first non-empty cell from
+     * beginning of buffer.
+     */
     private void recalculateLastCharacterIndex() {
         lastCharacterIndex = cellCount - 1;
 
@@ -87,6 +95,13 @@ public class TerminalBuffer {
         }
     }
 
+    /**
+     * Creates the TerminalBuffer object
+     *
+     * @param screenWidth width of terminal screen
+     * @param screenHeight height of terminal screen
+     * @param maxScrollbackLines number of lines saved in the scrollback buffer
+     */
     public TerminalBuffer(int screenWidth, int screenHeight, int maxScrollbackLines) {
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeight;
