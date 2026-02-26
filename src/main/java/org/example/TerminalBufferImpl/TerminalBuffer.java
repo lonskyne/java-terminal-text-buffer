@@ -58,6 +58,9 @@ public class TerminalBuffer {
             rows = screenHeight;
         }
 
+        // Insert the scrolled lines into the scrollback buffer
+        scrollbackBuffer.insertLastScreenLinesToScrollback(screenBuffer, rows);
+
         int totalCells = cellCount + screenWidth;
         int shift = rows * screenWidth;
 
@@ -268,6 +271,13 @@ public class TerminalBuffer {
     }
 
     /**
+     * Inserts an empty line at the bottom of the screen
+     */
+    public void insertEmptyLineAtBottomOfScreen() {
+        scrollUp(1);
+    }
+
+    /**
      * Clears the entire screen, moves cursor to the beginning.
      */
     public void clearScreen() {
@@ -275,62 +285,165 @@ public class TerminalBuffer {
     }
 
     /**
+     * Clears the entire screen and scrollback, moves cursor to the beginning.
+     */
+    public void clearScreenAndScrollback() {
+        scrollUp(screenHeight);
+        scrollbackBuffer.clearScrollbackBuffer();
+    }
+
+    /**
      * Returns a character that is in the given position in the screen buffer.
      *
-     * @param x row index
-     * @param y column index
+     * @param row row index
+     * @param column column index
      * @return character that is on the given position on the screen
+     * @throws IndexOutOfBoundsException when x and y are invalid
      */
-    public char getCharacterAtPositionScreen(int x, int y) {
-        return screenBuffer[x * screenWidth + y].getCharacter();
+    public char getCharacterAtPositionScreen(int row, int column) {
+        if(row < 0 || column < 0 || row >= screenHeight || column >= screenWidth) {
+            throw new IndexOutOfBoundsException("Row or column index out of bounds: row=" + row + ", y=" + column);
+        }
+
+        return screenBuffer[row * screenWidth + column].getCharacter();
+    }
+
+    /**
+     * Returns a character that is in the given position in the screen buffer.
+     *
+     * @param row row index
+     * @param column column index
+     * @return character that is on the given position on the scrollback
+     */
+    public char getCharacterAtPositionScrollback(int row, int column) {
+        if(row < 0 || column < 0 || row >= scrollbackBuffer.getMaxScrollbackLines() || column >= screenWidth) {
+            throw new IndexOutOfBoundsException("Row or column index out of bounds: row=" + row + ", y=" + column);
+        }
+
+        return scrollbackBuffer.getBuffer()[row * screenWidth + column].getCharacter();
     }
 
     /**
      * Returns the foreground color of a character in the given position
      * in the screen buffer.
      *
-     * @param x row index
-     * @param y column index
+     * @param row row index
+     * @param column column index
      * @return the foreground color of a character in the given position on the screen
      */
-    public TerminalBufferColor getForegroundColorAtPositionScreen(int x, int y) {
-        return screenBuffer[x * screenWidth + y].getForegroundColor();
+    public TerminalBufferColor getForegroundColorAtPositionScreen(int row, int column) {
+        if(row < 0 || column < 0 || row >= screenHeight || column >= screenWidth) {
+            throw new IndexOutOfBoundsException("Row or column index out of bounds: row=" + row + ", y=" + column);
+        }
+
+        return screenBuffer[row * screenWidth + column].getForegroundColor();
+    }
+
+    /**
+     * Returns the foreground color of a character in the given position
+     * in the scrollback buffer.
+     *
+     * @param row row index
+     * @param column column index
+     * @return foreground color of a character in the given position on the scrollback
+     */
+    public TerminalBufferColor getForegroundColorAtPositionScrollback(int row, int column) {
+        if(row < 0 || column < 0 || row >= scrollbackBuffer.getMaxScrollbackLines() || column >= screenWidth) {
+            throw new IndexOutOfBoundsException("Row or column index out of bounds: row=" + row + ", y=" + column);
+        }
+
+        return scrollbackBuffer.getBuffer()[row * screenWidth + column].getForegroundColor();
     }
 
     /**
      * Returns the background color of a character in the given position
      * in the screen buffer.
      *
-     * @param x row index
-     * @param y column index
+     * @param row row index
+     * @param column column index
      * @return the background color of a character in the given position on the screen
      */
-    public TerminalBufferColor getBackgroundColorAtPositionScreen(int x, int y) {
-        return screenBuffer[x * screenWidth + y].getBackgroundColor();
+    public TerminalBufferColor getBackgroundColorAtPositionScreen(int row, int column) {
+        if(row < 0 || column < 0 || row >= screenHeight || column >= screenWidth) {
+            throw new IndexOutOfBoundsException("Row or column index out of bounds: row=" + row + ", y=" + column);
+        }
+
+        return screenBuffer[row * screenWidth + column].getBackgroundColor();
+    }
+
+    /**
+     * Returns the background color of a character in the given position
+     * in the scrollback buffer.
+     *
+     * @param row row index
+     * @param column column index
+     * @return background color of a character in the given position on the scrollback
+     */
+    public TerminalBufferColor getBackgroundColorAtPositionScrollback(int row, int column) {
+        if(row < 0 || column < 0 || row >= scrollbackBuffer.getMaxScrollbackLines() || column >= screenWidth) {
+            throw new IndexOutOfBoundsException("Row or column index out of bounds: row=" + row + ", y=" + column);
+        }
+
+        return scrollbackBuffer.getBuffer()[row * screenWidth + column].getBackgroundColor();
     }
 
     /**
      * Returns the applied styles to a character in the given position
      * in the screen buffer.
      *
-     * @param x row index
-     * @param y column index
+     * @param row row index
+     * @param column column index
      * @return the applied styles to a character on the given position on the screen
      */
-    public EnumSet<TerminalBufferCellStyle> getStylesAtPositionScreen(int x, int y) {
-        return screenBuffer[x * screenWidth + y].getStyles();
+    public EnumSet<TerminalBufferCellStyle> getStylesAtPositionScreen(int row, int column) {
+        if(row < 0 || column < 0 || row >= screenHeight || column >= screenWidth) {
+            throw new IndexOutOfBoundsException("Row or column index out of bounds: row=" + row + ", y=" + column);
+        }
+
+        return screenBuffer[row * screenWidth + column].getStyles();
+    }
+
+    /**
+     * Returns the applied styles to a character in the given position
+     * in the scrollback buffer.
+     *
+     * @param row row index
+     * @param column column index
+     * @return the applied styles to a character on the given position on the scrollback
+     */
+    public EnumSet<TerminalBufferCellStyle> getStylesAtPositionScrollback(int row, int column) {
+        if(row < 0 || column < 0 || row >= scrollbackBuffer.getMaxScrollbackLines() || column >= screenWidth) {
+            throw new IndexOutOfBoundsException("Row or column index out of bounds: row=" + row + ", y=" + column);
+        }
+
+        return scrollbackBuffer.getBuffer()[row * screenWidth + column].getStyles();
     }
 
     /**
      * Returns the asked row of the screen as a string.
      *
-     * @param x row index
+     * @param row row index
      * @return the row of the screen as a string
      */
-    public String getScreenLineAsString(int x) {
+    public String getScreenLineAsString(int row) {
         StringBuilder sb = new StringBuilder();
         for(int y = 0; y < screenWidth; y++) {
-            sb.append(screenBuffer[x * screenWidth + y].getCharacter());
+            sb.append(screenBuffer[row * screenWidth + y].getCharacter());
+        }
+
+        return sb.toString();
+    }
+
+    /**
+     * Returns the asked row of the scrollback as a string.
+     *
+     * @param row row index
+     * @return the row of the screen as a string
+     */
+    public String getScrollbackLineAsString(int row) {
+        StringBuilder sb = new StringBuilder();
+        for(int y = 0; y < screenWidth; y++) {
+            sb.append(scrollbackBuffer.getBuffer()[row * screenWidth + y].getCharacter());
         }
 
         return sb.toString();
@@ -362,5 +475,15 @@ public class TerminalBuffer {
         }
 
         return sb.toString();
+    }
+
+    /**
+     * Returns a string representing the terminal scrollback and screen buffer.
+     * First maxScrollbackLines lines are lines of scrollback, others are of the screen.
+     *
+     * @return the string representation of the scrollback and screen buffer
+     */
+    public String getScreenAndScrollbackAsString() {
+        return scrollbackBuffer.getScrollbackAsString() + getScreenAsString();
     }
 }

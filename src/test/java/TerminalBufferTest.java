@@ -14,7 +14,7 @@ class TerminalBufferTest {
 
     @BeforeEach
     void setUp() {
-        terminal = new TerminalBuffer(5, 3, 0); // width=5, height=3
+        terminal = new TerminalBuffer(5, 3, 3); // width=5, height=3
     }
 
     @Test
@@ -37,6 +37,41 @@ class TerminalBufferTest {
         terminal.getCursor().moveRight(14);
         assertEquals(4, terminal.getCursor().getCurrentColumn());
         assertEquals(2, terminal.getCursor().getCurrentRow());
+    }
+
+    @Test
+    void testMoveUpAndDown() {
+        terminal.clearScreen();
+
+        terminal.getCursor().setPosition(1, 2);
+        terminal.getCursor().moveUp(1);
+        assertEquals(0, terminal.getCursor().getCurrentRow());
+
+        // Expected to clamp to top
+        terminal.getCursor().moveUp(5);
+        assertEquals(0, terminal.getCursor().getCurrentRow());
+
+        terminal.getCursor().moveDown(2);
+        assertEquals(2, terminal.getCursor().getCurrentRow());
+
+        // Expected to clamp to bottom
+        terminal.getCursor().moveDown(10); // clamp to bottom
+        assertEquals(2, terminal.getCursor().getCurrentRow());
+    }
+
+    @Test
+    void testCursorSetPositionBounds() {
+        terminal.clearScreen();
+
+        // Expected to clamp left and top
+        terminal.getCursor().setPosition(-5, -5);
+        assertEquals(0, terminal.getCursor().getCurrentRow());
+        assertEquals(0, terminal.getCursor().getCurrentColumn());
+
+        // Expected to clamp right and bottom
+        terminal.getCursor().setPosition(10, 10);
+        assertEquals(2, terminal.getCursor().getCurrentRow());
+        assertEquals(4, terminal.getCursor().getCurrentColumn());
     }
 
     @Test
@@ -220,5 +255,78 @@ class TerminalBufferTest {
         assertEquals(TerminalBufferColor.BLUE, terminal.getBackgroundColorAtPositionScreen(0, 1));
         assertEquals(TerminalBufferColor.RED, terminal.getForegroundColorAtPositionScreen(0, 1));
         assertEquals(EnumSet.of(TerminalBufferCellStyle.BOLD), terminal.getStylesAtPositionScreen(0, 1));
+    }
+
+    @Test
+    void testScrollbackStoresScrolledLines() {
+        terminal.clearScreen();
+
+        terminal.writeTextOnLine("AAAAA");
+        terminal.writeTextOnLine("BBBBB");
+        // Expected to cause scrolling
+        terminal.writeTextOnLine("CCCCC");
+
+        assertEquals("AAAAA", terminal.getScrollbackLineAsString(2));
+        assertEquals("BBBBB", terminal.getScreenLineAsString(0));
+        assertEquals("CCCCC", terminal.getScreenLineAsString(1));
+    }
+
+    @Test
+    void testScrollbackPreservesAttributes() {
+        terminal.clearScreen();
+        terminal.setCurrentForegroundColor(TerminalBufferColor.RED);
+        terminal.writeTextOnLine("AAAAA");
+
+        terminal.setCurrentForegroundColor(TerminalBufferColor.BLUE);
+        terminal.writeTextOnLine("BBBBB");
+
+        terminal.writeTextOnLine("CCCCC"); // scroll
+
+        assertEquals(
+                TerminalBufferColor.RED,
+                terminal.getForegroundColorAtPositionScrollback(2, 0)
+        );
+    }
+
+    @Test
+    void testClearScreenAndScrollback() {
+        terminal.clearScreen();
+
+        terminal.writeTextOnLine("AAAAA");
+        terminal.writeTextOnLine("BBBBB");
+        terminal.writeTextOnLine("CCCCC");
+
+        terminal.clearScreenAndScrollback();
+
+        assertEquals("·····\n·····\n·····\n·····\n·····\n·····\n", terminal.getScreenAndScrollbackAsString());
+    }
+
+    @Test
+    void testInsertEmptyString() {
+        terminal.clearScreen();
+        terminal.insertTextOnLine("");
+
+        assertEquals("·····\n·····\n·····\n", terminal.getScreenAsString());
+    }
+
+    @Test
+    void testWriteEmptyString() {
+        terminal.clearScreen();
+        terminal.writeTextOnLine("");
+
+        assertEquals("·····\n·····\n·····\n", terminal.getScreenAsString());
+    }
+
+    @Test
+    void testOutOfBoundsAccess() {
+        assertThrows(
+                IndexOutOfBoundsException.class,
+                () -> terminal.getCharacterAtPositionScreen(-1, 0)
+        );
+
+        assertThrows(
+                IndexOutOfBoundsException.class,
+                () -> terminal.getCharacterAtPositionScreen(0, 10)
+        );
     }
 }
