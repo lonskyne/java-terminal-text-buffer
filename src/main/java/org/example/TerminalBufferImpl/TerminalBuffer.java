@@ -174,7 +174,6 @@ public class TerminalBuffer {
     public void insertTextOnLine(String text) {
         int textLen = text.length();
         int textIndex = 0;
-
         // Move text in current row right if there is space
         int lastInRow = ((cursor.getCurrentRow() + 1) * screenWidth) - 1;
         while(lastInRow >= 0 && screenBuffer[lastInRow].isEmpty()) {
@@ -224,30 +223,32 @@ public class TerminalBuffer {
         // Add what is left of the text
         int notRowPart = leftoverLen % screenWidth;
 
-        // Free up row below cursor by shifting content down
-        int lastToCopy = ((cursor.getCurrentIndex() / screenWidth) + 1) * screenWidth;
-        for(int i = lastCharacterIndex + screenWidth; i >= lastToCopy + screenWidth; i--) {
-            screenBuffer[i].copyFrom(screenBuffer[i - screenWidth]);
-            screenBuffer[i - screenWidth].clear();
+        if(notRowPart > 0) {
+            // Free up row below cursor by shifting content down
+            int lastToCopy = ((cursor.getCurrentIndex() / screenWidth) + 1) * screenWidth;
+            for (int i = lastCharacterIndex + screenWidth; i >= lastToCopy + screenWidth; i--) {
+                screenBuffer[i].copyFrom(screenBuffer[i - screenWidth]);
+                screenBuffer[i - screenWidth].clear();
 
-            if(!screenBuffer[i].isEmpty()) {
-                lastCharacterIndex = Math.max(lastCharacterIndex, i);
+                if (!screenBuffer[i].isEmpty()) {
+                    lastCharacterIndex = Math.max(lastCharacterIndex, i);
+                }
             }
-        }
 
-        // Make just enough space for the notRowPart
-        for(int i = lastToCopy + notRowPart - 1; i >= cursor.getCurrentIndex() + notRowPart; i--) {
-            screenBuffer[i].copyFrom(screenBuffer[i - notRowPart]);
-            screenBuffer[i - notRowPart].clear();
+            // Make just enough space for the notRowPart
+            for (int i = lastToCopy + notRowPart - 1; i >= cursor.getCurrentIndex() + notRowPart; i--) {
+                screenBuffer[i].copyFrom(screenBuffer[i - notRowPart]);
+                screenBuffer[i - notRowPart].clear();
 
-            if(!screenBuffer[i].isEmpty()) {
-                lastCharacterIndex = Math.max(lastCharacterIndex, i);
+                if (!screenBuffer[i].isEmpty()) {
+                    lastCharacterIndex = Math.max(lastCharacterIndex, i);
+                }
             }
-        }
 
-        for(int i = 0; i < notRowPart; i++) {
-            writeCharacterOnScreenBuffer(text.charAt(textIndex));
-            textIndex++;
+            for (int i = 0; i < notRowPart; i++) {
+                writeCharacterOnScreenBuffer(text.charAt(textIndex));
+                textIndex++;
+            }
         }
 
         if(lastCharacterIndex / screenWidth == screenHeight) {
