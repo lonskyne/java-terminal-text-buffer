@@ -4,6 +4,8 @@ public class ScrollbackBuffer {
     private final int maxScrollbackLines;
     private final int screenWidth;
     private int startIndex;
+    private int curIndex;
+    private boolean anyWritten;
 
     private final TerminalBufferCell[] buffer;
 
@@ -11,6 +13,9 @@ public class ScrollbackBuffer {
         this.maxScrollbackLines = maxScrollbackLines;
         this.screenWidth = screenWidth;
         this.startIndex = 0;
+        this.curIndex = 0;
+        this.anyWritten = false;
+
         buffer = new TerminalBufferCell[screenWidth * maxScrollbackLines];
 
         for(int i = 0; i < screenWidth * maxScrollbackLines; i++) {
@@ -18,7 +23,14 @@ public class ScrollbackBuffer {
         }
     }
 
-    private void moveStartRowIndexOneCellLeft() {
+    private void moveCurIndexOneCellLeft() {
+        if(maxScrollbackLines == 0) {
+            return;
+        }
+        curIndex = (curIndex - 1 + buffer.length) % buffer.length;
+    }
+
+    private void moveStartIndexOneCellLeft() {
         if(maxScrollbackLines == 0) {
             return;
         }
@@ -30,26 +42,33 @@ public class ScrollbackBuffer {
             return;
         }
         for(int i = (numOfLines * screenWidth) - 1; i >= 0; i--) {
-            moveStartRowIndexOneCellLeft();
-            buffer[startIndex].copyFrom(screenBuffer[i]);
+            if(startIndex == curIndex && anyWritten) {
+                moveStartIndexOneCellLeft();
+            }
+
+            moveCurIndexOneCellLeft();
+            buffer[curIndex].copyFrom(screenBuffer[i]);
         }
+        anyWritten = true;
     }
 
     public void clearScrollbackBuffer() {
         if(maxScrollbackLines == 0) {
             return;
         }
-        int curIndex = startIndex;
+        int localIndex = startIndex;
         int endIndex = (startIndex - 1 + buffer.length) % buffer.length;
 
-        while(curIndex != endIndex) {
-            buffer[curIndex].clear();
-            curIndex = (curIndex + 1) % buffer.length;
+        while(localIndex != endIndex) {
+            buffer[localIndex].clear();
+            localIndex = (localIndex + 1) % buffer.length;
         }
 
-        buffer[curIndex].clear();
+        buffer[localIndex].clear();
 
         startIndex = 0;
+        curIndex = 0;
+        anyWritten = false;
     }
 
     public String getScrollbackAsString() {
@@ -59,20 +78,20 @@ public class ScrollbackBuffer {
 
         StringBuilder sb = new StringBuilder();
         int charsAdded = 0;
-        int curIndex = startIndex;
+        int localIndex = startIndex;
         int endIndex = (startIndex - 1 + buffer.length) % buffer.length;
 
-        while(curIndex != endIndex) {
-            sb.append(buffer[curIndex].getCharacter());
+        while(localIndex != endIndex) {
+            sb.append(buffer[localIndex].getCharacter());
             charsAdded++;
-            curIndex = (curIndex + 1) % buffer.length;
+            localIndex = (localIndex + 1) % buffer.length;
 
             if(charsAdded % screenWidth == 0) {
                 sb.append("\n");
             }
         }
 
-        sb.append(buffer[curIndex].getCharacter());
+        sb.append(buffer[localIndex].getCharacter());
         sb.append("\n");
 
         return sb.toString();

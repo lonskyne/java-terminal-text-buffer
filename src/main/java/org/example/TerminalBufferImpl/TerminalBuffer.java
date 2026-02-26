@@ -134,7 +134,7 @@ public class TerminalBuffer {
      * @param newStyles the new background color to be used
      */
     public void setCurrentStyles(EnumSet<TerminalBufferCellStyle> newStyles) {
-        this.currentStyles = newStyles;
+        this.currentStyles = EnumSet.copyOf(newStyles);
     }
 
     /**
@@ -302,7 +302,7 @@ public class TerminalBuffer {
      */
     public char getCharacterAtPositionScreen(int row, int column) {
         if(row < 0 || column < 0 || row >= screenHeight || column >= screenWidth) {
-            throw new IndexOutOfBoundsException("Row or column index out of bounds: row=" + row + ", y=" + column);
+            throw new IndexOutOfBoundsException("Row or column index out of bounds: row=" + row + ", column=" + column);
         }
 
         return screenBuffer[row * screenWidth + column].getCharacter();
@@ -317,7 +317,7 @@ public class TerminalBuffer {
      */
     public char getCharacterAtPositionScrollback(int row, int column) {
         if(row < 0 || column < 0 || row >= scrollbackBuffer.getMaxScrollbackLines() || column >= screenWidth) {
-            throw new IndexOutOfBoundsException("Row or column index out of bounds: row=" + row + ", y=" + column);
+            throw new IndexOutOfBoundsException("Row or column index out of bounds: row=" + row + ", column=" + column);
         }
 
         return scrollbackBuffer.getBuffer()[row * screenWidth + column].getCharacter();
@@ -333,7 +333,7 @@ public class TerminalBuffer {
      */
     public TerminalBufferColor getForegroundColorAtPositionScreen(int row, int column) {
         if(row < 0 || column < 0 || row >= screenHeight || column >= screenWidth) {
-            throw new IndexOutOfBoundsException("Row or column index out of bounds: row=" + row + ", y=" + column);
+            throw new IndexOutOfBoundsException("Row or column index out of bounds: row=" + row + ", column=" + column);
         }
 
         return screenBuffer[row * screenWidth + column].getForegroundColor();
@@ -349,7 +349,7 @@ public class TerminalBuffer {
      */
     public TerminalBufferColor getForegroundColorAtPositionScrollback(int row, int column) {
         if(row < 0 || column < 0 || row >= scrollbackBuffer.getMaxScrollbackLines() || column >= screenWidth) {
-            throw new IndexOutOfBoundsException("Row or column index out of bounds: row=" + row + ", y=" + column);
+            throw new IndexOutOfBoundsException("Row or column index out of bounds: row=" + row + ", column=" + column);
         }
 
         return scrollbackBuffer.getBuffer()[row * screenWidth + column].getForegroundColor();
@@ -365,7 +365,7 @@ public class TerminalBuffer {
      */
     public TerminalBufferColor getBackgroundColorAtPositionScreen(int row, int column) {
         if(row < 0 || column < 0 || row >= screenHeight || column >= screenWidth) {
-            throw new IndexOutOfBoundsException("Row or column index out of bounds: row=" + row + ", y=" + column);
+            throw new IndexOutOfBoundsException("Row or column index out of bounds: row=" + row + ", column=" + column);
         }
 
         return screenBuffer[row * screenWidth + column].getBackgroundColor();
@@ -381,7 +381,7 @@ public class TerminalBuffer {
      */
     public TerminalBufferColor getBackgroundColorAtPositionScrollback(int row, int column) {
         if(row < 0 || column < 0 || row >= scrollbackBuffer.getMaxScrollbackLines() || column >= screenWidth) {
-            throw new IndexOutOfBoundsException("Row or column index out of bounds: row=" + row + ", y=" + column);
+            throw new IndexOutOfBoundsException("Row or column index out of bounds: row=" + row + ", column=" + column);
         }
 
         return scrollbackBuffer.getBuffer()[row * screenWidth + column].getBackgroundColor();
@@ -397,7 +397,7 @@ public class TerminalBuffer {
      */
     public EnumSet<TerminalBufferCellStyle> getStylesAtPositionScreen(int row, int column) {
         if(row < 0 || column < 0 || row >= screenHeight || column >= screenWidth) {
-            throw new IndexOutOfBoundsException("Row or column index out of bounds: row=" + row + ", y=" + column);
+            throw new IndexOutOfBoundsException("Row or column index out of bounds: row=" + row + ", column=" + column);
         }
 
         return screenBuffer[row * screenWidth + column].getStyles();
@@ -413,7 +413,7 @@ public class TerminalBuffer {
      */
     public EnumSet<TerminalBufferCellStyle> getStylesAtPositionScrollback(int row, int column) {
         if(row < 0 || column < 0 || row >= scrollbackBuffer.getMaxScrollbackLines() || column >= screenWidth) {
-            throw new IndexOutOfBoundsException("Row or column index out of bounds: row=" + row + ", y=" + column);
+            throw new IndexOutOfBoundsException("Row or column index out of bounds: row=" + row + ", column=" + column);
         }
 
         return scrollbackBuffer.getBuffer()[row * screenWidth + column].getStyles();

@@ -19,14 +19,6 @@ public class TerminalBufferCell {
         styles = EnumSet.noneOf(TerminalBufferCellStyle.class);
     }
 
-    public TerminalBufferCell(char character, TerminalBufferColor backgroundColor, TerminalBufferColor foregroundColor, EnumSet<TerminalBufferCellStyle> styles) {
-        this.isEmpty = false;
-        this.character = character;
-        this.backgroundColor = backgroundColor;
-        this.foregroundColor = foregroundColor;
-        this.styles = styles;
-    }
-
     /**
      * Sets a character to a cell, making it not empty.
      *

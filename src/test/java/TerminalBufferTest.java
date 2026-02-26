@@ -258,6 +258,40 @@ class TerminalBufferTest {
     }
 
     @Test
+    void testCellAttributesScrollback() {
+        TerminalBuffer localTerminal = new TerminalBuffer(6, 2, 5);
+
+        localTerminal.setCurrentBackgroundColor(TerminalBufferColor.GREEN);
+        localTerminal.writeTextOnLine("AAAAAA");
+
+        localTerminal.setCurrentBackgroundColor(TerminalBufferColor.BLUE);
+        localTerminal.writeTextOnLine("BBBBBB");
+
+        // Expected to scroll and maintain color in scrollback
+        localTerminal.writeTextOnLine("CCCCCC");
+
+        assertEquals(
+                TerminalBufferColor.GREEN,
+                localTerminal.getBackgroundColorAtPositionScrollback(4, 0)
+        );
+
+        localTerminal.clearScreenAndScrollback();
+
+        localTerminal.setCurrentStyles(EnumSet.of(
+                TerminalBufferCellStyle.BOLD,
+                TerminalBufferCellStyle.UNDERLINE
+        ));
+
+        localTerminal.writeTextOnLine("AAAAAA");
+        localTerminal.writeTextOnLine("BBBBBB");
+
+        assertEquals(
+                EnumSet.of(TerminalBufferCellStyle.BOLD, TerminalBufferCellStyle.UNDERLINE),
+                localTerminal.getStylesAtPositionScrollback(4, 0)
+        );
+    }
+
+    @Test
     void testScrollbackStoresScrolledLines() {
         terminal.clearScreen();
 
@@ -302,6 +336,18 @@ class TerminalBufferTest {
     }
 
     @Test
+    void testGetCharacterAtPositionScrollback() {
+        TerminalBuffer localTerminal = new TerminalBuffer(5, 2, 5);
+
+        localTerminal.writeTextOnLine("HELLO");
+        localTerminal.writeTextOnLine("WORLD");
+        localTerminal.writeTextOnLine("!!!!!");
+
+        assertEquals('H', localTerminal.getCharacterAtPositionScrollback(4, 0));
+        assertEquals('O', localTerminal.getCharacterAtPositionScrollback(4, 4));
+    }
+
+    @Test
     void testInsertEmptyString() {
         terminal.clearScreen();
         terminal.insertTextOnLine("");
@@ -315,6 +361,25 @@ class TerminalBufferTest {
         terminal.writeTextOnLine("");
 
         assertEquals("·····\n·····\n·····\n", terminal.getScreenAsString());
+    }
+
+    @Test
+    void testInsertEmptyLineAtBottomOfScreen() {
+        TerminalBuffer localTerminal = new TerminalBuffer(5, 4, 5);
+
+        localTerminal.writeTextOnLine("AAAAA");
+        localTerminal.writeTextOnLine("BBBBB");
+        localTerminal.writeTextOnLine("CCCCC");
+
+        localTerminal.insertEmptyLineAtBottomOfScreen();
+
+        // First line should be scrolled into scrollback
+        assertEquals("AAAAA", localTerminal.getScrollbackLineAsString(4));
+
+        // Screen should shift up and bottom line be empty
+        assertEquals("BBBBB", localTerminal.getScreenLineAsString(0));
+        assertEquals("CCCCC", localTerminal.getScreenLineAsString(1));
+        assertEquals("·····", localTerminal.getScreenLineAsString(2));
     }
 
     @Test
